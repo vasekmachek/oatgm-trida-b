@@ -1,0 +1,40 @@
+name: CI
+
+# Kontrola každé změny: typy, testy výpočtu a produkční build.
+# Job "kontrola" bude povinný v ochraně větve main (fáze 7).
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kontrola:
+    name: kontrola
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalace závislostí
+        run: npm ci
+
+      - name: Kontrola typů
+        run: npm run typecheck
+
+      - name: Testy výpočtu
+        run: npm test
+
+      - name: Build
+        run: npm run build
